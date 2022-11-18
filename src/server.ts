@@ -11,7 +11,7 @@ server.use(
   "/api",
   routes,
   createProxyMiddleware({
-    target: "http://localhost:8000/",
+    target: "http://localhost:3333/",
     changeOrigin: true,
     onProxyRes: function (proxyRes, req, res) {
       proxyRes.headers["Access-Control-Allow-Origin"] = "*";
@@ -20,8 +20,5 @@ server.use(
 );
 
 server.use(express.urlencoded({ extended: true }));
-server.listen(8000);
+server.listen(3333, () => console.log("Server is running in 3333"));
 
-router.get("/health", (req, res) => {
-    return res.json("up")
-})
