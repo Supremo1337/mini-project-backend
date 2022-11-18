@@ -1,5 +1,5 @@
 import express, { Router } from "express";
-const router = require("express").Router();
+const router = Router();
 
 const server = express();
 const routes = require("./routes/routes.ts");
