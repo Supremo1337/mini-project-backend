@@ -1,11 +1,10 @@
-const router = require("express").Router();
-const authMiddleware = require("../middlewares/auth");
+import { Router } from "express";
+import { authMiddleware } from "../middlewares/auth";
 
+const router = Router();
 
 router.get("/", authMiddleware, (req, res) => {
-  try {
-    res.send({ ok: true, user: req.userId });
-  } catch (err) {console.log(err)}
+  res.send({ ok: true, user: req.userId });
 });
 
 module.exports = router;

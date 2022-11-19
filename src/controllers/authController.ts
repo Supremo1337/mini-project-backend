@@ -4,6 +4,7 @@ import { compare, hash } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 const authConfig = require("../config/auth.json");
 import { PrismaClient, User } from "@prisma/client";
+import { authMiddleware } from "../middlewares/auth";
 
 const prisma = new PrismaClient();
 
@@ -46,34 +47,44 @@ function generateToken(user: User) {
   });
 }
 
-// router.get("/users", async (req, res) => {
-//   console.log(req.query.token);
-//   const user = await users.findOne({
-//     token: req.query.token.replace('"', "").replace('"', ""),
-//   });
-//   console.log(user);
-//   if (user) return res.status(200).json({ error: false, user });
-//   else
-//     return res
-//       .status(200)
-//       .json({ error: true, message: "nenhuma ficha registrada pelo usuário" });
-// });
+router.get("/user", authMiddleware, async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: req.userId,
+    },
+  });
 
-// router.post("/authenticate", async (req, res) => {
-//   const { email, password } = req.body;
+  if (!user)
+    return res.status(200).json({ error: true, message: "erro no sistema" });
 
-//   const user = await users.findOne({ email }).select("+password");
+  delete user.password;
 
-//   if (!user) return res.status(400).send({ error: "User not found" });
+  res.json({ user });
+});
 
-//   if (!(await bcrypt.compare(password, user.password)))
-//     return res.status(400).send({ erro: "invalid password" });
+router.post("/authenticate", async (req, res) => {
+  const { username, password } = req.body;
 
-//   user.password = undefined;
-//   const token = generateToken({ id: user.id });
-//   await user.updateOne({ token: token });
-//   const fichaUser = await ficha.findOne({ email });
-//   res.status(200).send({ error: false, user, token: token, fichaUser });
-// });
+  const user = await prisma.user.findUnique({
+    where: {
+      username,
+    },
+  });
+
+  if (!user) return res.status(400).send({ error: "invalid password" });
+
+  const compareWrittenPasswordIsIgualUserPassword = await compare(
+    password,
+    user.password
+  );
+  if (!compareWrittenPasswordIsIgualUserPassword)
+    return res.status(400).send({ erro: "invalid password" });
+
+  delete user.password;
+
+  const token = generateToken(user);
+
+  res.status(200).send({ error: false, user, token: token });
+});
 
 module.exports = router;
