@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express, { Router } from "express";
 const router = Router();
 
@@ -21,4 +22,3 @@ server.use(
 
 server.use(express.urlencoded({ extended: true }));
 server.listen(3333, () => console.log("Server is running in 3333"));
-

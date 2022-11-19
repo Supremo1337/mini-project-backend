@@ -3,8 +3,9 @@ const router = Router();
 import { compare, hash } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 const authConfig = require("../config/auth.json");
-import { PrismaClient, User } from "@prisma/client";
+import { PrismaClient, User, Prisma } from "@prisma/client";
 import { authMiddleware } from "../middlewares/auth";
+import { startOfDay, endOfDay } from "date-fns";
 
 const prisma = new PrismaClient();
 
@@ -185,9 +186,7 @@ router.post("/tranfer", authMiddleware, async (req, res) => {
 });
 
 router.get("/transactions", authMiddleware, async (req, res) => {
-  const query = req.query
-  console.log(query)
-  const transactions = await prisma.transactions.findMany({
+  const conditions: Prisma.TransactionsFindManyArgs = {
     where: {
       OR: [
         {
@@ -198,9 +197,37 @@ router.get("/transactions", authMiddleware, async (req, res) => {
         },
       ],
     },
-  });
+  };
 
-  res.send({ message: "Transaçoes consultas", transactions });
+  if (req.query.type === "Cash-in") {
+    delete conditions.where.OR[1];
+  }
+
+  if (req.query.type === "Cash-out") {
+    delete conditions.where.OR[0];
+  }
+
+  if (req.query.date) {
+    const currentDate = new Date(req.query.date as any);
+    const startDay = startOfDay(currentDate);
+    const endDay = endOfDay(currentDate);
+
+    conditions.where.AND = {
+      createdAt: {
+        gte: startDay,
+        lte: endDay,
+      },
+    };
+  }
+
+  const transactions = await prisma.transactions.findMany(conditions);
+
+  res.send({
+    message: "Transaçoes consultas",
+    userId: req.userId,
+    accountId: req.accountsId,
+    transactions,
+  });
 });
 
 module.exports = router;
