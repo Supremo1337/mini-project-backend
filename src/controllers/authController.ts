@@ -8,8 +8,22 @@ import { authMiddleware } from "../middlewares/auth";
 
 const prisma = new PrismaClient();
 
+const regexPassword = new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/);
+
 router.post("/register", async (req, res) => {
   const { username, password } = req.body;
+  if (username.length < 3) {
+    return res
+      .status(400)
+      .send({ error: "seu usuario precisa ter minimo de 3 caracteres" });
+  }
+
+  if (!regexPassword.exec(password)) {
+    return res.status(400).send({
+      error:
+        "Sua senha precisa conter pelo menos 8 caracteres, um número e uma letra maiúscula.",
+    });
+  }
   try {
     const checkUsernameExists = await prisma.user.findUnique({
       where: {
@@ -25,6 +39,14 @@ router.post("/register", async (req, res) => {
       data: {
         username,
         password: hashedPassword,
+        account: {
+          create: {
+            balance: 100,
+          },
+        },
+      },
+      include: {
+        account: true,
       },
     });
 
@@ -51,6 +73,9 @@ router.get("/user", authMiddleware, async (req, res) => {
   const user = await prisma.user.findUnique({
     where: {
       id: req.userId,
+    },
+    include: {
+      account: true,
     },
   });
 
