@@ -64,7 +64,7 @@ router.post("/register", async (req, res) => {
 });
 
 function generateToken(user: User) {
-  return sign({ id: user.id }, authConfig.secret, {
+  return sign({ id: user.id, accountsId: user.accountsId }, authConfig.secret, {
     expiresIn: 86400,
   });
 }
@@ -182,6 +182,25 @@ router.post("/tranfer", authMiddleware, async (req, res) => {
   } catch (err) {
     res.send({ error: err.message });
   }
+});
+
+router.get("/transactions", authMiddleware, async (req, res) => {
+  const query = req.query
+  console.log(query)
+  const transactions = await prisma.transactions.findMany({
+    where: {
+      OR: [
+        {
+          creditedAccountId: req.accountsId,
+        },
+        {
+          debitedAccountId: req.accountsId,
+        },
+      ],
+    },
+  });
+
+  res.send({ message: "Transaçoes consultas", transactions });
 });
 
 module.exports = router;
