@@ -15,3 +15,16 @@ model User {
   username String @unique
   password String
 }
+
+model Accounts {
+  id      String  @id @default(uuid())
+  balance Decimal
+}
+
+model Transactions {
+  id                String   @id @default(uuid())
+  debitedAccountId  Decimal
+  creditedAccountId Decimal
+  value             Decimal
+  createdAt         DateTime @default(now())
+}
