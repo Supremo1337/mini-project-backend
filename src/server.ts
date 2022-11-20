@@ -1,24 +1,10 @@
 import "dotenv/config";
-import express, { Router } from "express";
-const router = Router();
+import express from "express";
+import { router } from "./routes/routes";
+import cors from "cors";
 
 const server = express();
-const routes = require("./routes/routes.ts");
-var cors = require("cors");
 server.use(express.json()); // faz com que o express entenda JSON
-const { createProxyMiddleware } = require("http-proxy-middleware");
 server.use(cors());
-server.use(
-  "/api",
-  routes,
-  createProxyMiddleware({
-    target: "http://localhost:3333/",
-    changeOrigin: true,
-    onProxyRes: function (proxyRes, req, res) {
-      proxyRes.headers["Access-Control-Allow-Origin"] = "*";
-    },
-  })
-);
-
-server.use(express.urlencoded({ extended: true }));
+server.use("/api", router);
 server.listen(3333, () => console.log("Server is running in 3333"));
