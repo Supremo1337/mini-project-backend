@@ -91,6 +91,26 @@ router.get("/transactions", authMiddleware, async (req, res) => {
         },
       ],
     },
+    include: {
+      creditedAccount: {
+        select: {
+          user: {
+            select: {
+              username: true,
+            },
+          },
+        },
+      },
+      debitedAccount: {
+        select: {
+          user: {
+            select: {
+              username: true,
+            },
+          },
+        },
+      },
+    },
   };
 
   if (req.query.type === "Cash-in") {
@@ -117,7 +137,7 @@ router.get("/transactions", authMiddleware, async (req, res) => {
   const transactions = await prisma.transactions.findMany(conditions);
 
   res.send({
-    message: "Transaçoes consultas",
+    message: "Transaçoes consultadas",
     userId: req.userId,
     accountId: req.accountsId,
     transactions,
